@@ -44,7 +44,15 @@ router.post('/', (req, res) => {
 // Update a task
 router.put('/:id', (req, res) => {
   const { id } = req.params;
-  console.log('Attempting to update task with ID:', id);
+  console.log(`PUT request for ID: ${id} with body:`, req.body);
+
+  const stmt = db.prepare('SELECT * FROM tasks WHERE id = ?');
+  const task = stmt.get(id);
+  if (!task) {
+    console.log(`Task with ID: ${id} not found in DB before update.`);
+    return res.status(404).json({ error: 'Task not found before update' });
+  }
+  console.log(`Found task to update: ${JSON.stringify(task)}`);
 
   try {
     const validatedData = CreateTaskSchema.partial().parse(req.body);
@@ -67,18 +75,21 @@ router.put('/:id', (req, res) => {
         }
     }
 
-    const stmt = db.prepare(`UPDATE tasks SET ${setClauses.join(', ')} WHERE id = ?`);
-    const result = stmt.run(...updateValues, id);
+    const updateStmt = db.prepare(`UPDATE tasks SET ${setClauses.join(', ')} WHERE id = ?`);
+    const result = updateStmt.run(...updateValues, id);
 
     if (result.changes === 0) {
-      return res.status(404).json({ error: 'Task not found (ID may be incorrect)' });
+      console.log(`Update failed for ID: ${id}`);
+      return res.status(404).json({ error: 'Task not found during update' });
     }
 
+    console.log(`Successfully updated task with ID: ${id}`);
     res.json({ id });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.issues });
     }
+    console.error('Error updating task:', error);
     res.status(500).json({ error: 'Failed to update task' });
   }
 });
@@ -87,11 +98,22 @@ router.put('/:id', (req, res) => {
 // Delete a task
 router.delete('/:id', (req, res) => {
   const { id } = req.params;
-  const stmt = db.prepare('DELETE FROM tasks WHERE id = ?');
-  const result = stmt.run(id);
-  if (result.changes === 0) {
-    return res.status(404).json({ error: 'Task not found' });
+  console.log(`DELETE request for ID: ${id}`);
+  const stmt = db.prepare('SELECT * FROM tasks WHERE id = ?');
+  const task = stmt.get(id);
+  if (!task) {
+    console.log(`Task with ID: ${id} not found in DB before delete.`);
+    return res.status(404).json({ error: 'Task not found before delete' });
   }
+  console.log(`Found task to delete: ${JSON.stringify(task)}`);
+
+  const deleteStmt = db.prepare('DELETE FROM tasks WHERE id = ?');
+  const result = deleteStmt.run(id);
+  if (result.changes === 0) {
+    console.log(`Deletion failed for ID: ${id}`);
+    return res.status(404).json({ error: 'Task not found during delete' });
+  }
+  console.log(`Successfully deleted task with ID: ${id}`);
   res.status(204).send();
 });
 

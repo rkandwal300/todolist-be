@@ -44,18 +44,35 @@ router.post('/', (req, res) => {
 // Update a task
 router.put('/:id', (req, res) => {
   const { id } = req.params;
+
   try {
-    const { name, priority, category, completed } = TaskSchema.parse({
-      ...req.body,
-      id,
-    });
-    const stmt = db.prepare(
-      'UPDATE tasks SET name = ?, priority = ?, category = ?, completed = ? WHERE id = ?'
-    );
-    const result = stmt.run(name, priority, category, completed ? 1 : 0, id);
+    const validatedData = CreateTaskSchema.partial().parse(req.body);
+    const fieldsToUpdate = Object.keys(validatedData);
+
+    if (fieldsToUpdate.length === 0) {
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+
+    // Handle boolean conversion for 'completed' field
+    const updateValues: (string | number | boolean)[] = [];
+    const setClauses: string[] = [];
+
+    for (const field of fieldsToUpdate) {
+        setClauses.push(`${field} = ?`);
+        if (field === 'completed') {
+            updateValues.push(validatedData[field] ? 1 : 0);
+        } else {
+            updateValues.push(validatedData[field as keyof typeof validatedData]!);
+        }
+    }
+
+    const stmt = db.prepare(`UPDATE tasks SET ${setClauses.join(', ')} WHERE id = ?`);
+    const result = stmt.run(...updateValues, id);
+
     if (result.changes === 0) {
       return res.status(404).json({ error: 'Task not found' });
     }
+
     res.json({ id });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -64,6 +81,7 @@ router.put('/:id', (req, res) => {
     res.status(500).json({ error: 'Failed to update task' });
   }
 });
+
 
 // Delete a task
 router.delete('/:id', (req, res) => {

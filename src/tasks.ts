@@ -30,7 +30,7 @@ router.post('/', (req, res) => {
     const stmt = db.prepare(
       'INSERT INTO tasks (id, name, priority, category, completed) VALUES (?, ?, ?, ?, ?)'
     );
-    const id = crypto.randomUUID();
+    const id = `task-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
     const result = stmt.run(id, name, priority, category, completed ? 1 : 0);
     res.status(201).json({ id });
   } catch (error) {

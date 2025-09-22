@@ -44,6 +44,7 @@ router.post('/', (req, res) => {
 // Update a task
 router.put('/:id', (req, res) => {
   const { id } = req.params;
+  console.log('Attempting to update task with ID:', id);
 
   try {
     const validatedData = CreateTaskSchema.partial().parse(req.body);
@@ -70,7 +71,7 @@ router.put('/:id', (req, res) => {
     const result = stmt.run(...updateValues, id);
 
     if (result.changes === 0) {
-      return res.status(404).json({ error: 'Task not found' });
+      return res.status(404).json({ error: 'Task not found (ID may be incorrect)' });
     }
 
     res.json({ id });

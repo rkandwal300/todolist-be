@@ -1,9 +1,10 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "outDir": "./dist",
+    "rootDir": "./src",
     "module": "commonjs",
-    "sourceMap": true,
-    "outDir": "dist",
+    "target": "es2020",
     "esModuleInterop": true
-  }
+  },
+  "include": ["src/**/*"]
 }

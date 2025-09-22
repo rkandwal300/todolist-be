@@ -7,20 +7,21 @@
   "scripts": {
     "dev": "nodemon --watch src --ext ts,json --exec \"npm run build && npm run start\"",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "postinstall": "npm run build"
   },
   "author": "Google LLC",
   "license": "Apache-2.0",
   "dependencies": {
     "better-sqlite3": "^12.3.0",
     "express": "^4.21.2",
-    "zod": "^4.1.11"
+    "zod": "^4.1.11",
+    "typescript": "^5.4.5"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
     "@types/express": "^5.0.3",
     "@types/node": "^20.12.12",
-    "nodemon": "^3.1.0",
-    "typescript": "^5.4.5"
+    "nodemon": "^3.1.0"
   }
 }
